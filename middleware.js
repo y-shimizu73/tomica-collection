@@ -101,7 +101,8 @@ export default async function middleware(request) {
   storageBucket: "${process.env.FIREBASE_STORAGE_BUCKET || ''}",
   messagingSenderId: "${process.env.FIREBASE_MESSAGING_SENDER_ID || ''}",
   appId: "${process.env.FIREBASE_APP_ID || ''}"
-};`;
+};
+export const geminiApiKey = "${process.env.GEMINI_API_KEY || ''}";`;
       return new Response(configJS, {
         headers: {
           'Content-Type': 'application/javascript; charset=utf-8',

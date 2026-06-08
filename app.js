@@ -22,11 +22,18 @@ let firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
+let serverGeminiApiKey = null;
+
 // Git管理外の設定ファイルがあれば動的に読み込む
 try {
   const localConfig = await import('./firebase-config.js').catch(() => null);
-  if (localConfig && localConfig.firebaseConfig) {
-    firebaseConfig = localConfig.firebaseConfig;
+  if (localConfig) {
+    if (localConfig.firebaseConfig) {
+      firebaseConfig = localConfig.firebaseConfig;
+    }
+    if (localConfig.geminiApiKey) {
+      serverGeminiApiKey = localConfig.geminiApiKey;
+    }
   }
 } catch (e) {
   console.log("Local firebase-config.js not found, using default credentials.");
@@ -486,7 +493,7 @@ function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.6) {
 // --- AI画像解析 (Gemini API) ---
 
 async function startImageAnalysis(base64Data) {
-  const apiKey = localStorage.getItem('gemini-api-key');
+  const apiKey = localStorage.getItem('gemini-api-key') || serverGeminiApiKey;
   if (!apiKey) {
     console.log("Gemini API key is not configured.");
     return;
@@ -988,6 +995,14 @@ function setupEventListeners() {
   settingsBtn.addEventListener('click', () => {
     const savedKey = localStorage.getItem('gemini-api-key') || '';
     geminiApiKeyInput.value = savedKey;
+    
+    // サーバーの環境変数でキーが提供されている場合の表示調整
+    if (serverGeminiApiKey) {
+      geminiApiKeyInput.placeholder = "サーバー環境変数で設定されています（上書き可能）";
+    } else {
+      geminiApiKeyInput.placeholder = "AIzaSy...";
+    }
+    
     settingsDialog.showModal();
   });
 
@@ -1002,7 +1017,11 @@ function setupEventListeners() {
       alert('設定を保存しました！トミカ登録時に自動画像解析が利用可能になります。');
     } else {
       localStorage.removeItem('gemini-api-key');
-      alert('APIキーを削除しました。自動入力機能は無効化されます。');
+      if (serverGeminiApiKey) {
+        alert('ローカルのAPIキーを削除しました。今後はサーバー（Vercel）の設定が適用されます。');
+      } else {
+        alert('APIキーを削除しました。自動入力機能は無効化されます。');
+      }
     }
     settingsDialog.close();
   });
