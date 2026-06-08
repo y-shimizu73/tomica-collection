@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>トミカ コレクション カタログ</title>
+  <meta name="description" content="子どものトミカコレクションを写真とメモで記録・管理するためのローカルデータベース・ウェブサイト。">
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-container">
+        <div class="logo-icon">T</div>
+        <div class="logo-text">
+          <h1>トミカ コレクション カタログ</h1>
+          <p>Tomica Collection Manager</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <!-- Settings Button -->
+        <button id="settingsBtn" class="theme-toggle-btn" title="設定 (APIキー登録)" style="font-size:1.1rem;">
+          ⚙️
+        </button>
+        <!-- Theme Toggle -->
+        <button id="themeToggle" class="theme-toggle-btn" title="テーマ切り替え">
+          🌙
+        </button>
+      </div>
+    </header>
+
+    <!-- Dashboard Stats -->
+    <section class="stats-dashboard" aria-label="統計情報">
+      <div class="stat-card" id="statCardTotal">
+        <div class="stat-icon total">🚗</div>
+        <div class="stat-info">
+          <span class="stat-value" id="statTotalCount">0</span>
+          <span class="stat-label">トミカの総数</span>
+        </div>
+      </div>
+      <div class="stat-card" id="statCardFavorites">
+        <div class="stat-icon favorites">❤️</div>
+        <div class="stat-info">
+          <span class="stat-value" id="statFavCount">0</span>
+          <span class="stat-label">お気に入り</span>
+        </div>
+      </div>
+      <div class="stat-card" id="statCardBoxed">
+        <div class="stat-icon boxed">📦</div>
+        <div class="stat-info">
+          <span class="stat-value" id="statBoxedCount">0</span>
+          <span class="stat-label">箱あり</span>
+        </div>
+      </div>
+      <div class="stat-card" id="statCardClean">
+        <div class="stat-icon clean">✨</div>
+        <div class="stat-info">
+          <span class="stat-value" id="statCleanCount">0</span>
+          <span class="stat-label">きれいな状態</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls Bar -->
+    <section class="controls-bar" aria-label="検索と絞り込み">
+      <div class="search-filter-row">
+        <!-- Search -->
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="名前、番号、メーカーで検索...">
+        </div>
+        
+        <!-- Sorting -->
+        <div class="select-wrapper">
+          <select id="sortSelect" class="select-input" aria-label="並び替え">
+            <option value="dateDesc">登録が新しい順</option>
+            <option value="dateAsc">登録が古い順</option>
+            <option value="numAsc">トミカ番号順 (昇順)</option>
+            <option value="nameAsc">名前順 (50音)</option>
+          </select>
+        </div>
+
+        <!-- Add Button -->
+        <button id="addTomicaBtn" class="btn btn-primary">
+          ➕ トミカを追加
+        </button>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <nav class="filter-pills-container" id="categoryFilterBar" aria-label="カテゴリで絞り込み">
+        <button class="filter-pill active" data-category="all">すべて</button>
+        <button class="filter-pill" data-category="standard">定番トミカ</button>
+        <button class="filter-pill" data-category="premium">トミカプレミアム</button>
+        <button class="filter-pill" data-category="long">ロングタイプ</button>
+        <button class="filter-pill" data-category="dream">ドリームトミカ</button>
+        <button class="filter-pill" data-category="limited">リミテッド/特注</button>
+        <button class="filter-pill" data-category="other">その他・シリーズ</button>
+      </nav>
+    </section>
+
+    <!-- Catalog Grid Area -->
+    <main class="catalog-grid" id="catalogGrid">
+      <!-- Empty state template (will be rendered dynamically by JS if no data) -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-state-icon">🚗💨</div>
+        <div class="empty-state-text">
+          <h3>トミカがまだ登録されていません</h3>
+          <p>上の「トミカを追加」ボタンを押して、コレクションを記録しましょう！</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal (Dialog) -->
+  <dialog id="addEditDialog">
+    <div class="dialog-header">
+      <h2 id="dialogTitle">トミカを登録する</h2>
+      <button class="dialog-close-btn" id="closeAddEditBtn" aria-label="閉じる">✕</button>
+    </div>
+    
+    <!-- We manage form submission in JS manually to support file uploads -->
+    <form id="addEditForm" novalidate style="position: relative;">
+      <!-- AI Loading Overlay -->
+      <div id="aiLoadingOverlay" class="ai-loading-overlay">
+        <div class="ai-loading-content">
+          <span class="ai-loading-icon">🤖✨</span>
+          <span class="ai-loading-text">AIがトミカの写真を分析中...</span>
+          <span class="ai-loading-subtext">少しお待ちください</span>
+        </div>
+      </div>
+      <input type="hidden" id="tomicaId" value="">
+      
+      <div class="dialog-body">
+        <div class="form-grid">
+          
+          <!-- Image Upload (Span 2) -->
+          <div class="form-group col-span-2">
+            <label>トミカの写真</label>
+            <input type="file" id="imageInput" accept="image/*" style="display:none;">
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+            
+            <div class="image-upload-wrapper" id="imageUploadWrapper">
+              <div class="upload-buttons-container">
+                <button type="button" class="upload-action-btn" id="cameraUploadBtn">
+                  <span class="btn-icon">📷</span>カメラを起動
+                </button>
+                <button type="button" class="upload-action-btn" id="fileUploadBtn">
+                  <span class="btn-icon">📁</span>写真を選択
+                </button>
+              </div>
+              <span class="upload-hint">またはドラッグ＆ドロップで写真を追加</span>
+              
+              <!-- Preview Area -->
+              <div class="preview-container" id="previewContainer">
+                <img src="" alt="プレビュー" class="preview-image" id="previewImage">
+                <button type="button" class="remove-image-btn" id="removeImageBtn" title="画像を削除">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Name -->
+          <div class="form-group col-span-2">
+            <label for="tomicaName">トミカの名前 <span style="color:var(--brand-red);">*</span></label>
+            <input type="text" id="tomicaName" class="form-input" placeholder="例: トヨタ プリウス" required>
+          </div>
+
+          <!-- Number -->
+          <div class="form-group">
+            <label for="tomicaNumber">トミカの番号</label>
+            <input type="text" id="tomicaNumber" class="form-input" placeholder="例: No.87">
+          </div>
+
+          <!-- Manufacturer / Brand -->
+          <div class="form-group">
+            <label for="tomicaBrand">メーカー / 車種</label>
+            <input type="text" id="tomicaBrand" class="form-input" placeholder="例: トヨタ, 日産, 救急車...">
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label for="tomicaCategory">カテゴリ</label>
+            <div class="select-wrapper">
+              <select id="tomicaCategory" class="select-input">
+                <option value="standard">定番トミカ</option>
+                <option value="premium">トミカプレミアム</option>
+                <option value="long">ロングタイプ</option>
+                <option value="dream">ドリームトミカ</option>
+                <option value="limited">リミテッド/特注</option>
+                <option value="other">その他・シリーズ</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Color selection -->
+          <div class="form-group">
+            <label>トミカのカラー</label>
+            <div class="color-presets">
+              <button type="button" class="color-preset-btn active" data-color="#ff3b30" style="background:#ff3b30;" title="赤"></button>
+              <button type="button" class="color-preset-btn" data-color="#0a84ff" style="background:#0a84ff;" title="青"></button>
+              <button type="button" class="color-preset-btn" data-color="#34c759" style="background:#34c759;" title="緑"></button>
+              <button type="button" class="color-preset-btn" data-color="#ffcc00" style="background:#ffcc00;" title="黄"></button>
+              <button type="button" class="color-preset-btn" data-color="#ffffff" style="background:#ffffff; border:1px solid var(--panel-border);" title="白"></button>
+              <button type="button" class="color-preset-btn" data-color="#1c1f26" style="background:#1c1f26;" title="黒"></button>
+              <button type="button" class="color-preset-btn" data-color="#8e8e93" style="background:#8e8e93;" title="グレー/シルバー"></button>
+              
+              <!-- Custom color picker -->
+              <div class="color-custom-wrapper" title="カスタムカラー">
+                <input type="color" id="customColorPicker" class="color-custom-picker" value="#ff3b30">
+              </div>
+            </div>
+          </div>
+
+          <!-- Condition -->
+          <div class="form-group">
+            <label for="tomicaCondition">トミカの状態</label>
+            <div class="select-wrapper">
+              <select id="tomicaCondition" class="select-input">
+                <option value="new">✨ 新品に近い / きれい</option>
+                <option value="good">🚗 普通 / キズ少し</option>
+                <option value="loved">🔧 よく遊んだ / キズ多め</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Box Yes/No -->
+          <div class="form-group">
+            <label>箱の有無</label>
+            <div class="switch-container">
+              <span class="switch-label" id="boxStatusText">箱あり (📦)</span>
+              <label class="switch">
+                <input type="checkbox" id="tomicaHasBox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Favorite -->
+          <div class="form-group">
+            <label>お気に入り登録</label>
+            <div class="switch-container">
+              <span class="switch-label" id="favStatusText">お気に入り (❤️)</span>
+              <label class="switch">
+                <input type="checkbox" id="tomicaIsFavorite">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Memo / Notes (Span 2) -->
+          <div class="form-group col-span-2">
+            <label for="tomicaNotes">メモ / 思い出</label>
+            <textarea id="tomicaNotes" class="form-input" placeholder="例: 誕生日にじぃじから貰った。お気に入りで毎日遊んでいる。"></textarea>
+          </div>
+
+        </div>
+      </div>
+      
+      <div class="dialog-footer">
+        <button type="button" id="cancelAddEditBtn" class="btn btn-secondary">キャンセル</button>
+        <button type="submit" id="saveTomicaBtn" class="btn btn-primary">保存する</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Detail Dialog (Detail View) -->
+  <dialog id="detailDialog">
+    <div class="dialog-header">
+      <h2>トミカの詳細</h2>
+      <button class="dialog-close-btn" id="closeDetailBtn" aria-label="閉じる">✕</button>
+    </div>
+    
+    <div class="dialog-body">
+      <div class="detail-layout">
+        
+        <!-- Large Image -->
+        <div class="detail-image-box">
+          <img src="" alt="トミカの写真" class="detail-img" id="detailImg">
+        </div>
+        
+        <!-- Title Row -->
+        <div class="detail-title-row">
+          <div>
+            <h3 class="detail-title" id="detailTitleName">トヨタ プリウス</h3>
+            <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.4rem;">
+              <span class="number-badge" id="detailTitleNumber" style="position:static;">No.87</span>
+              <span class="card-category" id="detailCategoryLabel">定番トミカ</span>
+            </div>
+          </div>
+          <button id="detailFavBtn" class="fav-badge-btn" title="お気に入り">❤️</button>
+        </div>
+
+        <!-- Info Table -->
+        <div class="detail-meta-table">
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">メーカー/車種</span>
+            <span class="detail-meta-value" id="detailBrand">トヨタ</span>
+          </div>
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">カラー</span>
+            <div style="display:flex; align-items:center; gap:0.4rem;">
+              <span class="card-color-dot" id="detailColorDot" style="background:#ff3b30;"></span>
+              <span class="detail-meta-value" id="detailColorName">赤</span>
+            </div>
+          </div>
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">箱の有無</span>
+            <span class="detail-meta-value" id="detailBoxStatus">箱あり (📦)</span>
+          </div>
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">状態</span>
+            <span class="detail-meta-value" id="detailCondition">新品に近い (✨)</span>
+          </div>
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">登録日</span>
+            <span class="detail-meta-value" id="detailCreatedDate">2026/06/06</span>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="detail-notes-box" id="detailNotesBox">
+          <h4 class="detail-notes-label">メモ・思い出</h4>
+          <p class="detail-notes-content" id="detailNotes">メモは登録されていません。</p>
+        </div>
+
+      </div>
+    </div>
+    
+    <div class="dialog-footer" style="justify-content: space-between;">
+      <!-- Delete Action -->
+      <button type="button" id="deleteTomicaBtn" class="btn btn-secondary" style="color:var(--brand-red); border-color:rgba(255,59,48,0.2);">
+        🗑 削除
+      </button>
+      
+      <!-- Edit & Close Actions -->
+      <div style="display:flex; gap:0.5rem;">
+        <button type="button" id="editTomicaBtn" class="btn btn-secondary">✏️ 編集</button>
+        <button type="button" id="closeDetailFooterBtn" class="btn btn-primary">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Cropper Dialog -->
+  <dialog id="cropperDialog">
+    <div class="dialog-header">
+      <h2>写真を切り抜く</h2>
+    </div>
+    <div class="dialog-body" style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem; height: 100%; overflow: hidden;">
+      <div class="cropper-wrapper">
+        <img id="cropperImage" src="" alt="クロップ画像">
+      </div>
+      <div class="cropper-toolbar">
+        <button type="button" id="cropperRotateLeftBtn" class="btn btn-secondary">🔄 左回転</button>
+        <button type="button" id="cropperRotateRightBtn" class="btn btn-secondary">🔄 右回転</button>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button type="button" id="cancelCropperBtn" class="btn btn-secondary">キャンセル</button>
+      <button type="button" id="confirmCropperBtn" class="btn btn-primary">決定する</button>
+    </div>
+  </dialog>
+
+  <!-- Settings Dialog (API Key) -->
+  <dialog id="settingsDialog">
+    <div class="dialog-header">
+      <h2>設定</h2>
+      <button class="dialog-close-btn" id="closeSettingsBtn" aria-label="閉じる">✕</button>
+    </div>
+    <div class="dialog-body" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+      <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+        トミカの写真をAIで自動解析し、名前やメーカー、色などの情報を自動入力するための設定です。
+      </p>
+      
+      <div class="form-group">
+        <label for="geminiApiKeyInput">Gemini APIキー</label>
+        <input type="password" id="geminiApiKeyInput" class="form-input" placeholder="AIzaSy...">
+        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+          ※キーは外部サーバーには送信されず、お使いのブラウザ内にのみ安全に保存されます。
+        </span>
+      </div>
+
+      <div style="background: rgba(10, 132, 255, 0.1); border: 1px solid rgba(10, 132, 255, 0.2); padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; line-height: 1.5;">
+        <strong>🔑 APIキーの無料取得方法:</strong><br>
+        1. <a href="https://aistudio.google.com/" target="_blank" style="color: var(--brand-blue); text-decoration: underline;">Google AI Studio</a> にGoogleアカウントでログイン。<br>
+        2. 「Create API Key」をクリックして作成し、コピーしてここに貼り付けます。
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button type="button" id="saveSettingsBtn" class="btn btn-primary" style="width: 100%;">設定を保存する</button>
+    </div>
+  </dialog>
+
+  <!-- Application Logic -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
