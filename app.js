@@ -165,7 +165,6 @@ const state = {
   sortBy: 'dateDesc',
   theme: 'dark',
   currentImageBase64: null,
-  selectedColor: '#ff3b30', // デフォルトカラー (赤)
   editingId: null,
   isNewImageSelected: false // 画像が新しく選択されたかのフラグ
 };
@@ -192,7 +191,6 @@ const addTomicaBtn = document.getElementById('addTomicaBtn');
 // 統計要素
 const statTotalCount = document.getElementById('statTotalCount');
 const statFavCount = document.getElementById('statFavCount');
-const statBoxedCount = document.getElementById('statBoxedCount');
 const statCleanCount = document.getElementById('statCleanCount');
 
 // ダイアログ要素 (追加/編集)
@@ -205,10 +203,8 @@ const tomicaNumberInput = document.getElementById('tomicaNumber');
 const tomicaBrandInput = document.getElementById('tomicaBrand');
 const tomicaCategorySelect = document.getElementById('tomicaCategory');
 const tomicaConditionSelect = document.getElementById('tomicaCondition');
-const tomicaHasBoxInput = document.getElementById('tomicaHasBox');
 const tomicaIsFavoriteInput = document.getElementById('tomicaIsFavorite');
 const tomicaNotesInput = document.getElementById('tomicaNotes');
-const boxStatusText = document.getElementById('boxStatusText');
 const favStatusText = document.getElementById('favStatusText');
 
 // 画像アップロード要素
@@ -222,9 +218,7 @@ const previewImage = document.getElementById('previewImage');
 const removeImageBtn = document.getElementById('removeImageBtn');
 
 
-// カラープリセット要素
-const colorPresetButtons = document.querySelectorAll('.color-preset-btn');
-const customColorPicker = document.getElementById('customColorPicker');
+
 
 // ダイアログ閉じるボタン
 const closeAddEditBtn = document.getElementById('closeAddEditBtn');
@@ -241,9 +235,7 @@ const detailTitleName = document.getElementById('detailTitleName');
 const detailTitleNumber = document.getElementById('detailTitleNumber');
 const detailCategoryLabel = document.getElementById('detailCategoryLabel');
 const detailBrand = document.getElementById('detailBrand');
-const detailColorDot = document.getElementById('detailColorDot');
-const detailColorName = document.getElementById('detailColorName');
-const detailBoxStatus = document.getElementById('detailBoxStatus');
+
 const detailCondition = document.getElementById('detailCondition');
 const detailCreatedDate = document.getElementById('detailCreatedDate');
 const detailNotes = document.getElementById('detailNotes');
@@ -278,18 +270,7 @@ function generateUniqueId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
-// カラーコード名取得 (簡易表示用)
-function getColorName(hex) {
-  const hexLower = hex.toLowerCase();
-  if (hexLower === '#ff3b30') return '赤';
-  if (hexLower === '#0a84ff') return '青';
-  if (hexLower === '#34c759') return '緑';
-  if (hexLower === '#ffcc00') return '黄';
-  if (hexLower === '#ffffff') return '白';
-  if (hexLower === '#1c1f26') return '黒';
-  if (hexLower === '#8e8e93') return 'グレー/シルバー';
-  return 'カスタム';
-}
+
 
 // 日付フォーマット
 function formatDate(timestamp) {
@@ -305,12 +286,10 @@ function formatDate(timestamp) {
 function updateStats() {
   const total = state.items.length;
   const favorites = state.items.filter(item => item.isFavorite).length;
-  const boxed = state.items.filter(item => item.hasBox).length;
   const clean = state.items.filter(item => item.condition === 'new').length;
 
   statTotalCount.textContent = total;
   statFavCount.textContent = favorites;
-  statBoxedCount.textContent = boxed;
   statCleanCount.textContent = clean;
 }
 
@@ -379,8 +358,7 @@ function renderCatalogGrid() {
     const numberBadgeHtml = item.number ? `<span class="number-badge">${escapeHTML(item.number)}</span>` : '';
     const favActive = item.isFavorite ? 'active' : '';
 
-    const boxBadgeClass = item.hasBox ? 'box-yes' : 'box-no';
-    const boxBadgeText = item.hasBox ? '📦 箱あり' : '❔ 箱なし';
+
     
     let condClass = 'cond-good';
     let condText = '普通';
@@ -410,12 +388,10 @@ function renderCatalogGrid() {
       <div class="card-content">
         <div class="card-meta">
           <span class="card-category">${CATEGORY_MAP[item.category] || item.category}</span>
-          <span class="card-color-dot" style="background:${item.color || '#ff3b30'}" title="${getColorName(item.color)}"></span>
         </div>
         <h3 class="card-title">${escapeHTML(item.name)}</h3>
         <p class="card-manufacturer">${escapeHTML(item.brand || '---')}</p>
         <div class="card-badges-row">
-          <span class="ui-badge ${boxBadgeClass}">${boxBadgeText}</span>
           <span class="ui-badge ${condClass}">${condText}</span>
         </div>
       </div>
@@ -533,7 +509,7 @@ async function startImageAnalysis(base64Data) {
           {
             parts: [
               {
-                text: "このおもちゃの車（トミカ）の写真を分析し、以下の情報を正確に判別して日本語のJSON形式で返してください。\n\nJSONのキーと値:\n- name: 車の正式名称（例: 'トヨタ プリウス', '日産 GT-R'）\n- brand: 自動車メーカーまたは車種分類（例: 'トヨタ', 'ホンダ', '救急車'）\n- number: トミカの番号（No.から始まる数字。写真から読み取れない場合や不明な場合はnull）\n- color: 最も近いボディカラー（選択肢: '#ff3b30' (赤), '#0a84ff' (青), '#34c759' (緑), '#ffcc00' (黄), '#ffffff' (白), '#1c1f26' (黒), '#8e8e93' (グレー)。近い色をこれらから選んでください）\n- category: トミカのカテゴリ（選択肢: 'standard' (定番トミカ), 'premium' (トミカプレミアム), 'long' (ロングタイプ), 'dream' (ドリームトミカ), 'limited' (リミテッド/特注), 'other' (その他)）\n- notes: この車に関する親しみやすい1〜2文の説明（例: 'ハイブリッドカーの先駆けとなったトヨタの代表的な車です。エコで静かな走りが特徴です。'）"
+                text: "このおもちゃの車（トミカ）の写真を分析し、以下の情報を正確に判別して日本語のJSON形式で返してください。\n\nJSONのキーと値:\n- name: 車の正式名称（例: 'トヨタ プリウス', '日産 GT-R'）\n- brand: 自動車メーカーまたは車種分類（例: 'トヨタ', 'ホンダ', '救急車'）\n- number: トミカの番号（No.から始まる数字。写真から読み取れない場合や不明な場合はnull）\n- category: トミカのカテゴリ（選択肢: 'standard' (定番トミカ), 'premium' (トミカプレミアム), 'long' (ロングタイプ), 'dream' (ドリームトミカ), 'limited' (リミテッド/特注), 'other' (その他)）\n- notes: この車に関する親しみやすい1〜2文の説明（例: 'ハイブリッドカーの先駆けとなったトヨタの代表的な車です。エコで静かな走りが特徴です。'）"
               },
               {
                 inlineData: {
@@ -595,7 +571,6 @@ async function startImageAnalysis(base64Data) {
     }
 
     if (result.category) tomicaCategorySelect.value = result.category;
-    if (result.color) resetColorSelection(result.color);
     if (result.notes) tomicaNotesInput.value = result.notes;
 
   } catch (err) {
@@ -645,19 +620,7 @@ function openCropper(file) {
   reader.readAsDataURL(file);
 }
 
-// カラー選択リセット
-function resetColorSelection(colorHex) {
-  state.selectedColor = colorHex || '#ff3b30';
-  customColorPicker.value = state.selectedColor;
 
-  colorPresetButtons.forEach(btn => {
-    if (btn.dataset.color.toLowerCase() === state.selectedColor.toLowerCase()) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-}
 
 // 追加フォームを開く
 function openAddModal() {
@@ -670,10 +633,7 @@ function openAddModal() {
   previewContainer.style.display = 'none';
   previewImage.src = '';
   
-  boxStatusText.textContent = '箱あり (📦)';
   favStatusText.textContent = 'お気に入り (🖤)';
-  
-  resetColorSelection('#ff3b30'); // デフォルト赤
 
   addEditDialog.showModal();
 }
@@ -693,11 +653,9 @@ async function openEditModal(id) {
   tomicaBrandInput.value = item.brand || '';
   tomicaCategorySelect.value = item.category;
   tomicaConditionSelect.value = item.condition || 'good';
-  tomicaHasBoxInput.checked = !!item.hasBox;
   tomicaIsFavoriteInput.checked = !!item.isFavorite;
   tomicaNotesInput.value = item.notes || '';
 
-  boxStatusText.textContent = item.hasBox ? '箱あり (📦)' : '箱なし (❔)';
   favStatusText.textContent = item.isFavorite ? 'お気に入り (❤️)' : 'お気に入り (🖤)';
 
   // 画像プレビュー設定
@@ -710,9 +668,6 @@ async function openEditModal(id) {
     previewContainer.style.display = 'none';
     previewImage.src = '';
   }
-
-  // カラー設定
-  resetColorSelection(item.color);
 
   detailDialog.close();
   addEditDialog.showModal();
@@ -741,10 +696,7 @@ function openDetailModal(id) {
   detailCategoryLabel.textContent = CATEGORY_MAP[item.category] || item.category;
   detailBrand.textContent = item.brand || '---';
   
-  detailColorDot.style.background = item.color || '#ff3b30';
-  detailColorName.textContent = getColorName(item.color);
 
-  detailBoxStatus.textContent = item.hasBox ? '箱あり (📦)' : '箱なし (❔)';
   
   let condText = '普通 (🚗)';
   if (item.condition === 'new') condText = '新品に近い (✨)';
@@ -930,21 +882,7 @@ function setupEventListeners() {
     startImageAnalysis(base64);
   });
 
-  // 4. カラー選択
-  colorPresetButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      resetColorSelection(btn.dataset.color);
-    });
-  });
 
-  customColorPicker.addEventListener('input', (e) => {
-    colorPresetButtons.forEach(btn => btn.classList.remove('active'));
-    state.selectedColor = e.target.value;
-  });
-
-  tomicaHasBoxInput.addEventListener('change', (e) => {
-    boxStatusText.textContent = e.target.checked ? '箱あり (📦)' : '箱なし (❔)';
-  });
 
   tomicaIsFavoriteInput.addEventListener('change', (e) => {
     favStatusText.textContent = e.target.checked ? 'お気に入り (❤️)' : 'お気に入り (🖤)';
@@ -977,9 +915,7 @@ function setupEventListeners() {
         number: tomicaNumberInput.value.trim(),
         brand: tomicaBrandInput.value.trim(),
         category: tomicaCategorySelect.value,
-        color: state.selectedColor,
         condition: tomicaConditionSelect.value,
-        hasBox: tomicaHasBoxInput.checked,
         isFavorite: tomicaIsFavoriteInput.checked,
         notes: tomicaNotesInput.value.trim(),
         image: finalImageBase64,
@@ -1092,4 +1028,8 @@ async function startApp() {
 }
 
 // ドキュメント読み込み完了時に起動
-document.addEventListener('DOMContentLoaded', startApp);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}

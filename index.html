@@ -48,13 +48,6 @@
           <span class="stat-label">お気に入り</span>
         </div>
       </div>
-      <div class="stat-card" id="statCardBoxed">
-        <div class="stat-icon boxed">📦</div>
-        <div class="stat-info">
-          <span class="stat-value" id="statBoxedCount">0</span>
-          <span class="stat-label">箱あり</span>
-        </div>
-      </div>
       <div class="stat-card" id="statCardClean">
         <div class="stat-icon clean">✨</div>
         <div class="stat-info">
@@ -194,25 +187,6 @@
             </div>
           </div>
 
-          <!-- Color selection -->
-          <div class="form-group">
-            <label>トミカのカラー</label>
-            <div class="color-presets">
-              <button type="button" class="color-preset-btn active" data-color="#ff3b30" style="background:#ff3b30;" title="赤"></button>
-              <button type="button" class="color-preset-btn" data-color="#0a84ff" style="background:#0a84ff;" title="青"></button>
-              <button type="button" class="color-preset-btn" data-color="#34c759" style="background:#34c759;" title="緑"></button>
-              <button type="button" class="color-preset-btn" data-color="#ffcc00" style="background:#ffcc00;" title="黄"></button>
-              <button type="button" class="color-preset-btn" data-color="#ffffff" style="background:#ffffff; border:1px solid var(--panel-border);" title="白"></button>
-              <button type="button" class="color-preset-btn" data-color="#1c1f26" style="background:#1c1f26;" title="黒"></button>
-              <button type="button" class="color-preset-btn" data-color="#8e8e93" style="background:#8e8e93;" title="グレー/シルバー"></button>
-              
-              <!-- Custom color picker -->
-              <div class="color-custom-wrapper" title="カスタムカラー">
-                <input type="color" id="customColorPicker" class="color-custom-picker" value="#ff3b30">
-              </div>
-            </div>
-          </div>
-
           <!-- Condition -->
           <div class="form-group">
             <label for="tomicaCondition">トミカの状態</label>
@@ -222,18 +196,6 @@
                 <option value="good">🚗 普通 / キズ少し</option>
                 <option value="loved">🔧 よく遊んだ / キズ多め</option>
               </select>
-            </div>
-          </div>
-
-          <!-- Box Yes/No -->
-          <div class="form-group">
-            <label>箱の有無</label>
-            <div class="switch-container">
-              <span class="switch-label" id="boxStatusText">箱あり (📦)</span>
-              <label class="switch">
-                <input type="checkbox" id="tomicaHasBox" checked>
-                <span class="slider"></span>
-              </label>
             </div>
           </div>
 
@@ -297,17 +259,6 @@
           <div class="detail-meta-item">
             <span class="detail-meta-label">メーカー/車種</span>
             <span class="detail-meta-value" id="detailBrand">トヨタ</span>
-          </div>
-          <div class="detail-meta-item">
-            <span class="detail-meta-label">カラー</span>
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-              <span class="card-color-dot" id="detailColorDot" style="background:#ff3b30;"></span>
-              <span class="detail-meta-value" id="detailColorName">赤</span>
-            </div>
-          </div>
-          <div class="detail-meta-item">
-            <span class="detail-meta-label">箱の有無</span>
-            <span class="detail-meta-value" id="detailBoxStatus">箱あり (📦)</span>
           </div>
           <div class="detail-meta-item">
             <span class="detail-meta-label">状態</span>

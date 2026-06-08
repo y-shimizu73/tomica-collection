@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン - トミカ コレクション カタログ</title>
+  <meta name="description" content="トミカ コレクション カタログのログイン画面。認証情報入力ページ。">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+  
+  <style>
+    /* index.css と統一感を持たせるためのデザイン変数 */
+    :root {
+      --font-family: 'Outfit', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --bg-color: #0d0f14;
+      --bg-gradient: linear-gradient(135deg, #0d0f14 0%, #151922 100%);
+      --panel-bg: rgba(22, 28, 41, 0.75);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f5f6f8;
+      --text-secondary: #9ea4b0;
+      --text-muted: #626978;
+      
+      --brand-red: #ff3b30;
+      --brand-blue: #0a84ff;
+      --road-gray: #1f2533;
+      --asphalt: #2c3547;
+      
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.4);
+      --glow-red: 0 0 15px rgba(255, 59, 48, 0.3);
+      --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-color);
+      background-image: var(--bg-gradient);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      overflow-x: hidden;
+    }
+
+    /* 背景のグリッド模様（アスファルト＆トラフィックテーマ） */
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+      background-size: 30px 30px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      z-index: 1;
+      animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    /* ガラスモルフィズムのカードデザイン */
+    .login-card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* ヘッダーロゴ (index.htmlと統一) */
+    .app-logo-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .logo-icon {
+      background: linear-gradient(135deg, var(--brand-red) 0%, #ff5b4f 100%);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.4rem;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      box-shadow: var(--glow-red);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      text-align: left;
+    }
+
+    .logo-text h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.5px;
+    }
+
+    .logo-text p {
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 1px;
+    }
+
+    /* フォーム項目 */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      position: relative;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.85rem 1rem 0.85rem 2.5rem;
+      background: var(--road-gray);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-family);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color var(--transition-fast), background-color var(--transition-fast);
+    }
+
+    .form-input:focus {
+      border-color: var(--brand-blue);
+      background-color: var(--asphalt);
+    }
+
+    /* エラーメッセージバナー */
+    .error-banner {
+      background: rgba(255, 59, 48, 0.1);
+      border: 1px solid rgba(255, 59, 48, 0.25);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      color: #ff453a;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      animation: shake 0.4s ease-in-out;
+    }
+
+    /* 送信ボタン */
+    .btn-login {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.95rem;
+      background: linear-gradient(135deg, var(--brand-red) 0%, #ff5b4f 100%);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      outline: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 59, 48, 0.2);
+      transition: transform var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .btn-login:hover {
+      box-shadow: var(--glow-red);
+      opacity: 0.95;
+    }
+
+    .btn-login:active {
+      transform: scale(0.98);
+    }
+
+    .btn-login:disabled {
+      background: var(--asphalt);
+      color: var(--text-muted);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* ローディングスピナー */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    /* アニメーション定義 */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-card">
+      
+      <!-- Logo -->
+      <header class="app-logo-header">
+        <div class="logo-icon">T</div>
+        <div class="logo-text">
+          <h1>トミカ コレクション カタログ</h1>
+          <p>Tomica Collection Manager</p>
+        </div>
+      </header>
+
+      <!-- Error Banner -->
+      <div id="errorBanner" class="error-banner">
+        <span>⚠️</span>
+        <span id="errorMessage">エラーが発生しました。</span>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" style="display:flex; flex-direction:column; gap:1.25rem;">
+        
+        <!-- Username -->
+        <div class="form-group">
+          <label for="username">ユーザー名</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input type="text" id="username" class="form-input" placeholder="ユーザー名を入力してください" required autocomplete="username">
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">パスワード</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="password" class="form-input" placeholder="パスワードを入力してください" required autocomplete="current-password">
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" id="submitBtn" class="btn-login" style="margin-top:0.75rem;">
+          <span id="btnSpinner" class="spinner"></span>
+          <span id="btnText">ログインする</span>
+        </button>
+        
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const btnText = document.getElementById('btnText');
+    const errorBanner = document.getElementById('errorBanner');
+    const errorMessage = document.getElementById('errorMessage');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // UIをローディング状態にする
+      submitBtn.disabled = true;
+      btnSpinner.style.display = 'block';
+      btnText.textContent = '認証中...';
+      errorBanner.style.display = 'none';
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // ログイン成功 -> トップページへリダイレクト
+          window.location.href = '/';
+        } else {
+          // ログイン失敗
+          showError(data.error || 'ログインに失敗しました。');
+        }
+      } catch (err) {
+        showError('通信エラーが発生しました。インターネット接続を確認してください。');
+        console.error(err);
+      } finally {
+        // UIを元に戻す
+        submitBtn.disabled = false;
+        btnSpinner.style.display = 'none';
+        btnText.textContent = 'ログインする';
+      }
+    });
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorBanner.style.display = 'flex';
+      
+      // アニメーションを再起動して揺らす
+      errorBanner.style.animation = 'none';
+      errorBanner.offsetHeight; // リフロートリガー
+      errorBanner.style.animation = 'shake 0.4s ease-in-out';
+    }
+  </script>
+</body>
+</html>
