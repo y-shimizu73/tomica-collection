@@ -21,10 +21,6 @@
         </div>
       </div>
       <div class="header-actions">
-        <!-- Settings Button -->
-        <button id="settingsBtn" class="theme-toggle-btn" title="設定 (APIキー登録)" style="font-size:1.1rem;">
-          ⚙️
-        </button>
         <!-- Theme Toggle -->
         <button id="themeToggle" class="theme-toggle-btn" title="テーマ切り替え">
           🌙
@@ -255,7 +251,7 @@
               <span class="card-category" id="detailCategoryLabel">定番トミカ</span>
             </div>
           </div>
-          <button id="detailFavBtn" class="fav-badge-btn" title="お気に入り">❤️</button>
+          <button id="detailFavBtn" class="detail-fav-btn" title="お気に入り">❤️</button>
         </div>
 
         <!-- Info Table -->
@@ -317,35 +313,7 @@
     </div>
   </dialog>
 
-  <!-- Settings Dialog (API Key) -->
-  <dialog id="settingsDialog">
-    <div class="dialog-header">
-      <h2>設定</h2>
-      <button class="dialog-close-btn" id="closeSettingsBtn" aria-label="閉じる">✕</button>
-    </div>
-    <div class="dialog-body" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
-      <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
-        トミカの写真をAIで自動解析し、名前やメーカー、色などの情報を自動入力するための設定です。
-      </p>
-      
-      <div class="form-group">
-        <label for="geminiApiKeyInput">Gemini APIキー</label>
-        <input type="password" id="geminiApiKeyInput" class="form-input" placeholder="AIzaSy...">
-        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
-          ※キーは外部サーバーには送信されず、お使いのブラウザ内にのみ安全に保存されます。
-        </span>
-      </div>
 
-      <div style="background: rgba(10, 132, 255, 0.1); border: 1px solid rgba(10, 132, 255, 0.2); padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; line-height: 1.5;">
-        <strong>🔑 APIキーの無料取得方法:</strong><br>
-        1. <a href="https://aistudio.google.com/" target="_blank" style="color: var(--brand-blue); text-decoration: underline;">Google AI Studio</a> にGoogleアカウントでログイン。<br>
-        2. 「Create API Key」をクリックして作成し、コピーしてここに貼り付けます。
-      </div>
-    </div>
-    <div class="dialog-footer">
-      <button type="button" id="saveSettingsBtn" class="btn btn-primary" style="width: 100%;">設定を保存する</button>
-    </div>
-  </dialog>
 
   <!-- Application Logic -->
   <script type="module" src="app.js"></script>

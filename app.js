@@ -264,13 +264,6 @@ const cropperRotateRightBtn = document.getElementById('cropperRotateRightBtn');
 const cancelCropperBtn = document.getElementById('cancelCropperBtn');
 const confirmCropperBtn = document.getElementById('confirmCropperBtn');
 
-// 設定ダイアログ要素
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsDialog = document.getElementById('settingsDialog');
-const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
-
 
 // --- ユーティリティ関数 ---
 
@@ -1028,41 +1021,6 @@ function setupEventListeners() {
   themeToggle.addEventListener('click', () => {
     const newTheme = state.theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
-  });
-
-  // 8. 設定ダイアログ (APIキー) のイベント
-  settingsBtn.addEventListener('click', () => {
-    const savedKey = localStorage.getItem('gemini-api-key') || '';
-    geminiApiKeyInput.value = savedKey;
-    
-    // サーバーの環境変数でキーが提供されている場合の表示調整
-    if (serverGeminiApiKey) {
-      geminiApiKeyInput.placeholder = "サーバー環境変数で設定されています（上書き可能）";
-    } else {
-      geminiApiKeyInput.placeholder = "AIzaSy...";
-    }
-    
-    settingsDialog.showModal();
-  });
-
-  closeSettingsBtn.addEventListener('click', () => {
-    settingsDialog.close();
-  });
-
-  saveSettingsBtn.addEventListener('click', () => {
-    const key = geminiApiKeyInput.value.trim();
-    if (key) {
-      localStorage.setItem('gemini-api-key', key);
-      alert('設定を保存しました！トミカ登録時に自動画像解析が利用可能になります。');
-    } else {
-      localStorage.removeItem('gemini-api-key');
-      if (serverGeminiApiKey) {
-        alert('ローカルのAPIキーを削除しました。今後はサーバー（Vercel）の設定が適用されます。');
-      } else {
-        alert('APIキーを削除しました。自動入力機能は無効化されます。');
-      }
-    }
-    settingsDialog.close();
   });
 }
 

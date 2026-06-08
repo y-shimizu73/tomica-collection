@@ -1073,6 +1073,36 @@ input:checked + .slider:before {
   font-weight: 700;
 }
 
+.detail-fav-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--road-gray);
+  border: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.detail-fav-btn:hover {
+  transform: scale(1.1);
+  background: rgba(255, 59, 48, 0.1);
+  border-color: rgba(255, 59, 48, 0.3);
+}
+
+.detail-fav-btn.active {
+  color: var(--brand-red);
+  background: rgba(255, 59, 48, 0.15);
+  border-color: rgba(255, 59, 48, 0.4);
+}
+
 .detail-meta-table {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
