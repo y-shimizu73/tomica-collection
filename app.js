@@ -493,8 +493,9 @@ function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.6) {
 // --- AI画像解析 (Gemini API) ---
 
 async function startImageAnalysis(base64Data) {
-  const apiKey = localStorage.getItem('gemini-api-key') || serverGeminiApiKey;
-  if (!apiKey) {
+  let apiKey = localStorage.getItem('gemini-api-key') || serverGeminiApiKey;
+  if (apiKey) apiKey = apiKey.trim();
+  if (!apiKey || apiKey === 'undefined' || apiKey === 'null') {
     console.log("Gemini API key is not configured.");
     return;
   }
@@ -504,6 +505,14 @@ async function startImageAnalysis(base64Data) {
 
   try {
     const rawBase64 = base64Data.split(',')[1];
+    
+    // Base64データURLからMIMEタイプを動的に抽出 (例: data:image/png;base64,... -> image/png)
+    let mimeType = "image/jpeg";
+    const mimeMatch = base64Data.match(/^data:(image\/[a-zA-Z0-9.-]+);base64,/);
+    if (mimeMatch) {
+      mimeType = mimeMatch[1];
+    }
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
@@ -520,7 +529,7 @@ async function startImageAnalysis(base64Data) {
               },
               {
                 inlineData: {
-                  mimeType: "image/jpeg",
+                  mimeType: mimeType,
                   data: rawBase64
                 }
               }
