@@ -25,9 +25,25 @@ export default async function middleware(request) {
   // 環境変数から認証情報を取得
   const expectedUser = process.env.BASIC_AUTH_USER;
   const expectedPassword = process.env.BASIC_AUTH_PASSWORD;
+  const readonlyPassword = process.env.READONLY_PASSWORD;
+  const shareKey = process.env.SHARE_KEY;
   
   // 期待されるセッションクッキーのトークン値を生成 (ユーザー名とパスワードのBase64)
   const expectedToken = (expectedUser && expectedPassword) ? btoa(`${expectedUser}:${expectedPassword}`) : null;
+  const expectedReadonlyToken = (expectedUser && readonlyPassword) ? btoa(`${expectedUser}:${readonlyPassword}`) : null;
+
+  // 0. URL共有用シークレットキーによる自動ログイン
+  if (shareKey && url.searchParams.get('share') === shareKey) {
+    if (expectedReadonlyToken) {
+      const response = Response.redirect(new URL('/', request.url), 307);
+      // 閲覧専用のセッショントークンをセット (30日間有効, Secure, HttpOnly, SameSite=Strict)
+      response.headers.set(
+        'Set-Cookie',
+        `session_token=${expectedReadonlyToken}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Strict; Secure`
+      );
+      return response;
+    }
+  }
 
   // 1. API ログイン エンドポイント (POST /api/login)
   if (url.pathname === '/api/login' && request.method === 'POST') {
@@ -55,6 +71,19 @@ export default async function middleware(request) {
           `session_token=${token}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Strict; Secure`
         );
         return response;
+      } else if (readonlyPassword && password === readonlyPassword) {
+        // 閲覧専用ログイン
+        const response = new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json; charset=utf-8' }
+        });
+        
+        // 閲覧専用のセッショントークンをセット (30日間有効)
+        response.headers.set(
+          'Set-Cookie',
+          `session_token=${expectedReadonlyToken}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Strict; Secure`
+        );
+        return response;
       } else {
         return new Response(JSON.stringify({ error: 'ユーザー名またはパスワードが正しくありません。' }), {
           status: 401,
@@ -73,7 +102,7 @@ export default async function middleware(request) {
   if (url.pathname === '/login.html') {
     const token = getCookie(request, 'session_token');
     // すでにログイン済みの場合はトップページにリダイレクト
-    if (token && token === expectedToken) {
+    if (token && (token === expectedToken || (expectedReadonlyToken && token === expectedReadonlyToken))) {
       return Response.redirect(new URL('/', request.url), 307);
     }
     return; // login.htmlの読み込みを許可
@@ -89,11 +118,12 @@ export default async function middleware(request) {
 
   const token = getCookie(request, 'session_token');
 
-  if (token === expectedToken) {
+  if (token === expectedToken || (expectedReadonlyToken && token === expectedReadonlyToken)) {
     // 認証成功！
     
     // Vercel本番環境で、環境変数からFirebase設定を動的生成して返す
     if (url.pathname === '/firebase-config.js') {
+      const isReadonly = (expectedReadonlyToken && token === expectedReadonlyToken);
       const configJS = `export const firebaseConfig = {
   apiKey: "${process.env.FIREBASE_API_KEY || ''}",
   authDomain: "${process.env.FIREBASE_AUTH_DOMAIN || ''}",
@@ -102,7 +132,8 @@ export default async function middleware(request) {
   messagingSenderId: "${process.env.FIREBASE_MESSAGING_SENDER_ID || ''}",
   appId: "${process.env.FIREBASE_APP_ID || ''}"
 };
-export const geminiApiKey = "${process.env.GEMINI_API_KEY || ''}";`;
+export const geminiApiKey = "${process.env.GEMINI_API_KEY || ''}";
+export const isReadonly = ${isReadonly};`;
       return new Response(configJS, {
         headers: {
           'Content-Type': 'application/javascript; charset=utf-8',

@@ -1103,6 +1103,21 @@ input:checked + .slider:before {
   border-color: rgba(255, 59, 48, 0.4);
 }
 
+.detail-fav-btn.readonly {
+  cursor: default;
+}
+
+.detail-fav-btn.readonly:hover {
+  transform: none;
+  background: var(--road-gray);
+  border-color: var(--panel-border);
+}
+
+.detail-fav-btn.readonly.active:hover {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: rgba(255, 59, 48, 0.4);
+}
+
 .detail-meta-table {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

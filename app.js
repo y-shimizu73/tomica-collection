@@ -23,6 +23,7 @@ let firebaseConfig = {
 };
 
 let serverGeminiApiKey = null;
+let isReadonlyConfig = false;
 
 // Git管理外の設定ファイルがあれば動的に読み込む
 try {
@@ -33,6 +34,9 @@ try {
     }
     if (localConfig.geminiApiKey) {
       serverGeminiApiKey = localConfig.geminiApiKey;
+    }
+    if (localConfig && typeof localConfig.isReadonly !== 'undefined') {
+      isReadonlyConfig = localConfig.isReadonly;
     }
   }
 } catch (e) {
@@ -173,7 +177,8 @@ const state = {
   theme: 'dark',
   currentImageBase64: null,
   editingId: null,
-  isNewImageSelected: false // 画像が新しく選択されたかのフラグ
+  isNewImageSelected: false, // 画像が新しく選択されたかのフラグ
+  isReadonly: isReadonlyConfig
 };
 
 
@@ -693,6 +698,16 @@ function openDetailModal(id) {
 
   detailDialog.dataset.id = id;
 
+  if (state.isReadonly) {
+    editTomicaBtn.style.display = 'none';
+    deleteTomicaBtn.style.display = 'none';
+    detailFavBtn.classList.add('readonly');
+  } else {
+    editTomicaBtn.style.display = '';
+    deleteTomicaBtn.style.display = '';
+    detailFavBtn.classList.remove('readonly');
+  }
+
   if (item.image) {
     detailImg.src = item.image;
     detailImg.style.display = 'block';
@@ -1001,6 +1016,10 @@ function setupEventListeners() {
   });
 
   detailFavBtn.addEventListener('click', async () => {
+    if (state.isReadonly) {
+      alert('閲覧専用モードのため、お気に入りの変更はできません。');
+      return;
+    }
     const id = detailDialog.dataset.id;
     if (!id) return;
 
@@ -1030,6 +1049,11 @@ async function startApp() {
   try {
     initTheme();
     setupEventListeners();
+    
+    // 閲覧専用モードの場合の表示制限
+    if (state.isReadonly) {
+      if (addTomicaBtn) addTomicaBtn.style.display = 'none';
+    }
     
     // 1. Firebaseのリアルタイム同期を開始
     subscribeToTomicas();
