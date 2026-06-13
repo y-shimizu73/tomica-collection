@@ -916,6 +916,17 @@ function setupEventListeners() {
   closeAddEditBtn.addEventListener('click', () => addEditDialog.close());
   cancelAddEditBtn.addEventListener('click', () => addEditDialog.close());
 
+  // モーダルの外側をクリックすると閉じるようにする
+  [addEditDialog, detailDialog, cropperDialog].forEach(dialog => {
+    if (dialog) {
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          dialog.close();
+        }
+      });
+    }
+  });
+
   // 3. 画像のアップロード
   imageUploadWrapper.addEventListener('click', (e) => {
     if (e.target.closest('#cameraUploadBtn') || e.target.closest('#fileUploadBtn') || e.target.closest('#aiScanBtn') || e.target.closest('#removeImageBtn')) {
