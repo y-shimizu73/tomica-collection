@@ -35,12 +35,14 @@ export default async function middleware(request) {
   // 0. URL共有用シークレットキーによる自動ログイン
   if (shareKey && url.searchParams.get('share') === shareKey) {
     if (expectedReadonlyToken) {
-      const response = Response.redirect(new URL('/', request.url), 307);
-      // 閲覧専用のセッショントークンをセット (30日間有効, Secure, HttpOnly, SameSite=Strict)
-      response.headers.set(
-        'Set-Cookie',
-        `session_token=${expectedReadonlyToken}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Strict; Secure`
-      );
+      const redirectUrl = new URL('/', request.url).toString();
+      const response = new Response(null, {
+        status: 307,
+        headers: {
+          'Location': redirectUrl,
+          'Set-Cookie': `session_token=${expectedReadonlyToken}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Strict; Secure`
+        }
+      });
       return response;
     }
   }
@@ -103,7 +105,7 @@ export default async function middleware(request) {
     const token = getCookie(request, 'session_token');
     // すでにログイン済みの場合はトップページにリダイレクト
     if (token && (token === expectedToken || (expectedReadonlyToken && token === expectedReadonlyToken))) {
-      return Response.redirect(new URL('/', request.url), 307);
+      return Response.redirect(new URL('/', request.url).toString(), 307);
     }
     return; // login.htmlの読み込みを許可
   }
@@ -146,5 +148,5 @@ export const isReadonly = ${isReadonly};`;
   }
 
   // 4. 未認証の場合はログイン画面へリダイレクト
-  return Response.redirect(new URL('/login.html', request.url), 307);
+  return Response.redirect(new URL('/login.html', request.url).toString(), 307);
 }
