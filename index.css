@@ -225,6 +225,158 @@ body {
   color: var(--text-secondary);
 }
 
+/* --- Analytics Dashboard --- */
+.analytics-dashboard {
+  margin-bottom: 2.5rem;
+  animation: fadeIn 0.4s ease-out both;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.analytics-card {
+  background: var(--panel-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.analytics-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 0.5rem;
+}
+
+/* 目標設定 & 円形進捗 */
+.goal-setting {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.goal-label {
+  color: var(--text-secondary);
+}
+
+.goal-input {
+  width: 60px;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--road-gray);
+  border: 1px solid var(--panel-border);
+  color: var(--text-primary);
+  text-align: center;
+  font-weight: 700;
+  outline: none;
+  font-family: var(--font-family);
+}
+
+.goal-input:focus {
+  border-color: var(--brand-blue);
+}
+
+.circle-progress-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+.progress-ring__circle {
+  transition: stroke-dashoffset 0.35s;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+.circle-progress-text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-percent {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.progress-subtext {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+/* 横型棒グラフ（プログレスバー）スタイル */
+.stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.stat-row:last-child {
+  margin-bottom: 0;
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.stat-name {
+  color: var(--text-primary);
+}
+
+.stat-count {
+  color: var(--text-secondary);
+}
+
+.stat-bar-bg {
+  height: 8px;
+  background: var(--road-gray);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  width: 0;
+  transition: width 0.5s ease-out;
+}
+
+/* Category progress fills */
+.stat-bar-fill.cat-standard { background: var(--brand-blue); }
+.stat-bar-fill.cat-premium { background: var(--brand-yellow); }
+.stat-bar-fill.cat-long { background: var(--brand-green); }
+.stat-bar-fill.cat-dream { background: var(--brand-purple); }
+.stat-bar-fill.cat-limited { background: var(--text-secondary); }
+.stat-bar-fill.cat-other { background: var(--brand-red); }
+
+/* Brand progress fill (default gradients) */
+.stat-bar-fill.brand-fill {
+  background: linear-gradient(90deg, var(--brand-blue) 0%, rgba(10, 132, 255, 0.6) 100%);
+}
+
 /* --- Controls / Toolbar --- */
 .controls-bar {
   background: var(--panel-bg);

@@ -53,6 +53,47 @@
       </div>
     </section>
 
+    <!-- Analytics Dashboard (可視化エリア) -->
+    <section class="analytics-dashboard" aria-label="コレクション分析" id="analyticsSection" style="display: none;">
+      <div class="analytics-grid">
+        <!-- 左: コレクション目標達成率 -->
+        <div class="analytics-card progress-circle-card">
+          <h3 class="analytics-title">🎯 コレクション目標</h3>
+          <div class="goal-setting">
+            <span class="goal-label">目標台数:</span>
+            <input type="number" id="targetGoalInput" class="goal-input" min="1" max="1000" value="50">
+            <span class="goal-unit">台</span>
+          </div>
+          <div class="circle-progress-wrapper">
+            <svg class="progress-ring" width="120" height="120">
+              <circle class="progress-ring__background" stroke="var(--road-gray)" stroke-width="12" fill="transparent" r="50" cx="60" cy="60"/>
+              <circle id="goalProgressCircle" class="progress-ring__circle" stroke="var(--brand-red)" stroke-width="12" fill="transparent" r="50" cx="60" cy="60" stroke-dasharray="314.16 314.16" stroke-dashoffset="314.16"/>
+            </svg>
+            <div class="circle-progress-text">
+              <span class="progress-percent" id="goalPercentText">0%</span>
+              <span class="progress-subtext" id="goalRemainingText">あと50台</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 中: カテゴリ別内訳 -->
+        <div class="analytics-card categories-card">
+          <h3 class="analytics-title">📁 カテゴリ別割合</h3>
+          <div class="analytics-list" id="categoryStatsList">
+            <!-- 動的に生成 -->
+          </div>
+        </div>
+
+        <!-- 右: メーカー別内訳 -->
+        <div class="analytics-card brands-card">
+          <h3 class="analytics-title">🏢 メーカー別 TOP 5</h3>
+          <div class="analytics-list" id="brandStatsList">
+            <!-- 動的に生成 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Controls Bar -->
     <section class="controls-bar" aria-label="検索と絞り込み">
       <div class="search-filter-row">

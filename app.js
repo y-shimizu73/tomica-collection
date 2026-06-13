@@ -205,6 +205,15 @@ const statTotalCount = document.getElementById('statTotalCount');
 const statFavCount = document.getElementById('statFavCount');
 const statCleanCount = document.getElementById('statCleanCount');
 
+// 分析要素
+const analyticsSection = document.getElementById('analyticsSection');
+const targetGoalInput = document.getElementById('targetGoalInput');
+const goalProgressCircle = document.getElementById('goalProgressCircle');
+const goalPercentText = document.getElementById('goalPercentText');
+const goalRemainingText = document.getElementById('goalRemainingText');
+const categoryStatsList = document.getElementById('categoryStatsList');
+const brandStatsList = document.getElementById('brandStatsList');
+
 // ダイアログ要素 (追加/編集)
 const addEditDialog = document.getElementById('addEditDialog');
 const addEditForm = document.getElementById('addEditForm');
@@ -289,6 +298,15 @@ function formatDate(timestamp) {
 
 // --- データの集計 ---
 
+// 円形進捗の更新
+function setGoalProgress(percent) {
+  if (!goalProgressCircle) return;
+  const radius = goalProgressCircle.r.baseVal.value;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (Math.min(percent, 100) / 100 * circumference);
+  goalProgressCircle.style.strokeDashoffset = offset;
+}
+
 // 統計表示の更新
 function updateStats() {
   const total = state.items.length;
@@ -298,6 +316,100 @@ function updateStats() {
   statTotalCount.textContent = total;
   statFavCount.textContent = favorites;
   statCleanCount.textContent = clean;
+
+  // 1台以上ある場合のみ分析ダッシュボードを表示
+  if (total === 0) {
+    if (analyticsSection) analyticsSection.style.display = 'none';
+    return;
+  }
+  if (analyticsSection) analyticsSection.style.display = 'block';
+
+  // --- 🎯 コレクション目標の計算 ---
+  let targetGoal = parseInt(localStorage.getItem('tomica-target-goal')) || 50;
+  if (targetGoalInput) {
+    targetGoalInput.value = targetGoal;
+  }
+  const percent = targetGoal > 0 ? Math.round((total / targetGoal) * 100) : 0;
+  if (goalPercentText) goalPercentText.textContent = `${percent}%`;
+  
+  if (goalRemainingText) {
+    const remaining = targetGoal - total;
+    if (remaining > 0) {
+      goalRemainingText.textContent = `あと${remaining}台`;
+      goalRemainingText.style.color = 'var(--text-muted)';
+    } else {
+      goalRemainingText.textContent = '目標達成！✨';
+      goalRemainingText.style.color = 'var(--brand-green)';
+    }
+  }
+  setGoalProgress(percent);
+
+  // --- 📁 カテゴリ別割合の計算と描画 ---
+  if (categoryStatsList) {
+    categoryStatsList.innerHTML = '';
+    const categories = ['standard', 'premium', 'long', 'dream', 'limited', 'other'];
+    categories.forEach(cat => {
+      const count = state.items.filter(item => item.category === cat).length;
+      const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+      
+      const row = document.createElement('div');
+      row.className = 'stat-row';
+      row.innerHTML = `
+        <div class="stat-header">
+          <span class="stat-name">${CATEGORY_MAP[cat] || cat}</span>
+          <span class="stat-count">${count}台 (${pct}%)</span>
+        </div>
+        <div class="stat-bar-bg">
+          <div class="stat-bar-fill cat-${cat}" style="width: ${pct}%"></div>
+        </div>
+      `;
+      categoryStatsList.appendChild(row);
+    });
+  }
+
+  // --- 🏢 メーカー別 TOP 5 の計算と描画 ---
+  if (brandStatsList) {
+    brandStatsList.innerHTML = '';
+    
+    // 空文字や '---' を除外してメーカーを集計
+    const brandCounts = {};
+    state.items.forEach(item => {
+      const rawBrand = (item.brand || '').trim();
+      if (rawBrand && rawBrand !== '---') {
+        brandCounts[rawBrand] = (brandCounts[rawBrand] || 0) + 1;
+      }
+    });
+
+    // ソートして配列化
+    const sortedBrands = Object.entries(brandCounts)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])) // 台数降順、名前昇順
+      .slice(0, 5); // 上位5件
+
+    if (sortedBrands.length === 0) {
+      brandStatsList.innerHTML = `
+        <div style="font-size:0.85rem; color:var(--text-muted); text-align:center; padding:1.5rem 0;">
+          メーカー情報のあるトミカがありません。
+        </div>
+      `;
+    } else {
+      sortedBrands.forEach(([brandName, count]) => {
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        
+        const row = document.createElement('div');
+        row.className = 'stat-row';
+        row.innerHTML = `
+          <div class="stat-header">
+            <span class="stat-name">${escapeHTML(brandName)}</span>
+            <span class="stat-count">${count}台 (${pct}%)</span>
+          </div>
+          <div class="stat-bar-bg">
+            <div class="stat-bar-fill brand-fill" style="width: ${pct}%"></div>
+          </div>
+        `;
+        brandStatsList.appendChild(row);
+      });
+    }
+  }
 }
 
 
@@ -1041,6 +1153,18 @@ function setupEventListeners() {
     const newTheme = state.theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
   });
+
+  // 8. 分析ダッシュボードの目標入力イベント
+  if (targetGoalInput) {
+    targetGoalInput.addEventListener('change', (e) => {
+      let val = parseInt(e.target.value);
+      if (isNaN(val) || val < 1) val = 1;
+      if (val > 1000) val = 1000;
+      e.target.value = val;
+      localStorage.setItem('tomica-target-goal', val);
+      updateStats();
+    });
+  }
 }
 
 
