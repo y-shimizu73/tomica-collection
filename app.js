@@ -231,10 +231,8 @@ const favStatusText = document.getElementById('favStatusText');
 // 画像アップロード要素
 const imageInput = document.getElementById('imageInput');
 const cameraInput = document.getElementById('cameraInput');
-const aiScanInput = document.getElementById('aiScanInput');
 const cameraUploadBtn = document.getElementById('cameraUploadBtn');
 const fileUploadBtn = document.getElementById('fileUploadBtn');
-const aiScanBtn = document.getElementById('aiScanBtn');
 const imageUploadWrapper = document.getElementById('imageUploadWrapper');
 const previewContainer = document.getElementById('previewContainer');
 const previewImage = document.getElementById('previewImage');
@@ -929,7 +927,7 @@ function setupEventListeners() {
 
   // 3. 画像のアップロード
   imageUploadWrapper.addEventListener('click', (e) => {
-    if (e.target.closest('#cameraUploadBtn') || e.target.closest('#fileUploadBtn') || e.target.closest('#aiScanBtn') || e.target.closest('#removeImageBtn')) {
+    if (e.target.closest('#cameraUploadBtn') || e.target.closest('#fileUploadBtn') || e.target.closest('#removeImageBtn')) {
       return;
     }
     imageInput.click();
@@ -943,32 +941,6 @@ function setupEventListeners() {
   fileUploadBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     imageInput.click();
-  });
-
-  aiScanBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    aiScanInput.click();
-  });
-
-  aiScanInput.addEventListener('change', async (e) => {
-    if (e.target.files.length > 0) {
-      const file = e.target.files[0];
-      const overlay = document.getElementById('aiLoadingOverlay');
-      if (overlay) overlay.style.display = 'flex';
-      
-      try {
-        const base64 = await compressImage(file, 800, 800, 0.6);
-        if (base64) {
-          await startImageAnalysis(base64);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("画像の読み込みまたは解析に失敗しました。");
-      } finally {
-        if (overlay) overlay.style.display = 'none';
-        aiScanInput.value = ''; // 選択をクリア
-      }
-    }
   });
   
   imageInput.addEventListener('change', (e) => {
